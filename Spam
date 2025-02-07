@@ -1,0 +1,104 @@
+import random
+import time
+
+PROMOTION_TYPES = {"discount": "Discount", "freeShipping": "Free Shipping", "buyOneGetOne": "Buy One Get One"}
+
+def safe_input(prompt, cast=int, min_val=None, max_val=None):
+    while True:
+        try:
+            value = cast(input(prompt))
+            if (min_val is not None and value < min_val) or (max_val is not None and value > max_val):
+                raise ValueError
+            return value
+        except ValueError:
+            print("Invalid input, try again.")
+
+def dynamic_promo_select(past_promos=None): return random.choice(list(PROMOTION_TYPES.keys()))
+def progress_bar(progress, total): print(f"Progress: [{'=' * int(progress * 20):20}] {progress}/{total}", end='\r')
+def email_template(promo): return f"<html><body><h1>Exclusive Promotion!</h1><p>{promo}</p></body></html>"
+def retry(func, retries=3, delay=1):
+    for attempt in range(retries):
+        try: return func()
+        except:
+            if attempt == retries - 1: raise
+            print(f"Failed attempt {attempt + 1}, retrying in {delay} seconds...")
+            time.sleep(delay)
+def custom_msg(): return input("Custom message or Enter for default: ") or "Check out our deals!"
+def validate_email(email): return '@' in email and '.' in email
+def validate_phone(phone): return phone.isdigit() and len(phone) >= 10
+def mobile_format(promo, alt="Promotion Image"): return f"<p>{promo}</p><img src='promo.jpg' alt='{alt}'>"
+def performance_monitor(start): print(f"Time taken: {time.time() - start:.2f} seconds")
+
+cache = []
+def cache_promo(promo):
+    cache.append(promo)
+    if len(cache) > 10: cache.pop(0)
+
+campaigns = []
+def manage_campaigns(name, promos): campaigns.append({"name": name, "promotions": promos})
+
+def cart_recovery(user_id): return f"User {user_id}, your cart awaits! Finish your purchase!"
+def time_based_promo(current_time): return "Morning Special!" if current_time.hour < 12 else "Evening Deal!"
+def viral_promo(promo): return f"Share '{promo}' for more benefits!"
+def reward_user(user_id): print(f"Rewarding user {user_id}!")
+def escalate_promo(promo): return f"{promo} - Now even better!"
+def generate_promo_image(promo_text): print(f"Generating image for: {promo_text}")
+def voice_interaction(): print("Listening for voice command...")
+def exclusive_promo(user_id): return f"Exclusive for {user_id}: Special offer!"
+def log_promo(promo, action): print(f"Promotion '{promo}' - {action}")
+def generate_promos(promo_type, count): return [f"{PROMOTION_TYPES[promo_type]} Promotion #{i+1}" for i in range(count)]
+
+def text_or_call():
+    while True:
+        choice = input("1 for Text, 2 for Call: ")
+        if choice in ['1', '2']: return "Text" if choice == '1' else "Call"
+
+def main():
+    hours, minutes, messages = safe_input("Hours for promotion: ", int, 0), safe_input("Minutes for promotion: ", int, 0, 59), safe_input("Messages to send: ", int, 1)
+    end_time, sent, start = time.time() + (hours * 3600) + (minutes * 60), 0, time.time()
+    
+    while time.time() < end_time and sent < messages:
+        promo_type, promo_count = dynamic_promo_select(), min(random.randint(1, 5), messages - sent)
+        method = input("Email or text/call? (E/T): ").lower()
+        promos = generate_promos(promo_type, promo_count)
+        
+        for promo in promos:
+            msg = custom_msg() + " - " + promo
+            if method == 'e':
+                email = input("Email address: ")
+                if validate_email(email):
+                    print(f"Email to {email}: {email_template(mobile_format(msg))}")
+                else:
+                    print("Invalid email.")
+                    continue
+            else:
+                phone = input("Phone number: ")
+                if validate_phone(phone):
+                    print(f"SMS to {phone}: {msg}" if text_or_call() == "Text" else f"Speak: {msg}")
+                else:
+                    print("Invalid phone.")
+                    continue
+
+            progress_bar(sent + 1, messages)
+            cache_promo(promo)
+            log_promo(promo, "sent")
+            sent += 1
+
+            if time.localtime().tm_min % 10 == 0:
+                print(viral_promo(promo), time_based_promo(time.localtime()))
+                reward_user(safe_input("User ID for reward: ", str))
+                generate_promo_image(promo)
+                voice_interaction()
+                print(exclusive_promo(safe_input("User ID for exclusive promo: ", str)))
+                print(escalate_promo(promo))
+                print(cart_recovery(safe_input("User ID for cart recovery: ", str)))
+
+            if sent < messages: time.sleep(60)
+
+        manage_campaigns("Current Campaign", promos)
+
+    performance_monitor(start)
+    print(f"\nFinished sending {messages}" if sent >= messages else "\nTime's up.")
+
+if __name__ == "__main__":
+    main()
